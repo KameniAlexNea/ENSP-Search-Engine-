@@ -27,6 +27,9 @@ class EngineModel():
         self._read(model_folder)
     
     def _read(self, model_folder="./ml_models/sauvegarde/"):
+        """
+            Charger les modèles de machine de learning pour la classification
+        """
         with open(model_folder+"model_lr.pkl", "rb") as file:
             self.lr = pkl.load(file) # Model Logistique
         with open(model_folder+"model_xgboost.pkl", "rb") as file:
@@ -51,13 +54,18 @@ class EngineModel():
         self.query = m.clean_dataframe(query)
         return self.data_clean.copy()
     
-    def classifier_df(self, query_clean, data_clean, column="text_clean"):
+    def classify_base_on_bloom(self, query_clean, data_clean, column="text_clean"):
+        """
+            Classifier la requete ainsi que le jeu de données d'entrainement
+        """
         query_vect = self.vectoriser.transform(query_clean[column])
         query_prob = (self.lr.predict_proba(query_vect)+self.xgb.predict_proba(query_vect))/2
 
-        data_vect = data[column].apply(lambda x: self.vectoriser.transform(x))
+        data_vect = data_clean[column].apply(lambda x: self.vectoriser.transform(x))
         data_prob = data_vect.apply(lambda x: (self.lr.predict_proba(x)+self.xgb.predict_proba(x))/2)
         return query_prob, data_prob
+    
+
     
     def _fetch_exemples(self, path="./ml_models/exemple/queries.txt", save_to="./ml_models/exemple/", count=70):
         """
@@ -114,4 +122,27 @@ class EngineModel():
         return self.query, self.data.copy()
 
 
+class Result(models.Model):
 
+    def __init__(self, row, link, title, summary, bloom_type, score, query_class):
+        self.link = link
+        self.title = title
+        self.summary = summary
+        self.bloom_type = bloom_type
+        self.score = score
+        self.query_class = query_class
+        self.row = row
+
+    def __str__(self):
+        return self.title
+
+    @classmethod
+    def fromEngineResult(cls, row, data):
+        return cls(row, data[0], data[1], data[2], data[3], data[4], data[5])
+
+    @staticmethod
+    def createResults(df: pd.DataFrame):
+        results = np.array([
+            Result.fromEngineResult(row, data) for row, data in df.iterrows()
+        ])
+        return results
