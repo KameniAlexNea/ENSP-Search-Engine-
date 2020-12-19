@@ -5,13 +5,13 @@ import os
 import ml_models.tools.models as m
 import glob
 import requests
-
+import pickle as pkl
 
 
 # Create your models here.
 
 class EngineModel():
-    def __init__(self,):
+    def __init__(self, model_folder="./ml_models/sauvegarde/"):
         self.headers = { 
             "apikey": "60e07650-2df1-11eb-96e2-bf23fa38d811"
         }
@@ -19,8 +19,22 @@ class EngineModel():
         self.response = None
         self.base_url = 'https://app.zenserp.com/api/v2/'
         self.columns = ["url", "title", "description", "destination"]
+        self.data = None
+        self.data_clean = None
+        self.lr = None
+        self.xgb = None
+        self.vectoriser = None
+        self._read(model_folder)
+    
+    def _read(self, model_folder="./ml_models/sauvegarde/"):
+        with open(model_folder+"model_lr.pkl", "rb") as file:
+            self.lr = pkl.load(file) # Model Logistique
+        with open(model_folder+"model_xgboost.pkl", "rb") as file:
+            self.xgb = pkl.load(file) # Model XGBoost
+        with open(model_folder+"tfidf.pkl", "rb") as file:
+            self.vectoriser = pkl.load(file) # Model Vectoriser
 
-    def clean_text(self, question:str, answers:pd.DataFrame, column="snippet"):
+    def clean_text(self, question:str, answers:pd.DataFrame, column="description"):
         """
             Nettoyer les données obtenues de la requête et de l'API de recherche
             Params:
@@ -29,13 +43,26 @@ class EngineModel():
                     - devrait contenir la colonne **column**: default snippet
             Return:
                 res: pd.Series
-                     Series de [requete & reponses] nettoyées
+                     Series de [requete & reponses] nettoyées dans 'text_clean'
         """
-        data = pd.DataFrame(np.append([question], answers[column].values), columns=["text"])
-        data = m.clean_dataframe(data)
-        return data
+        reponses = pd.DataFrame(answers[column].values, columns=["text"])
+        query = pd.DataFrame(np.array([question]), columns=["text"])
+        self.data_clean = m.clean_dataframe(reponses)
+        self.query = m.clean_dataframe(query)
+        return self.data_clean.copy()
+    
+    def classifier_df(self, query_clean, data_clean, column="text_clean"):
+        query_vect = self.vectoriser.transform(query_clean[column])
+        query_prob = (self.lr.predict_proba(query_vect)+self.xgb.predict_proba(query_vect))/2
+
+        data_vect = data[column].apply(lambda x: self.vectoriser.transform(x))
+        data_prob = data_vect.apply(lambda x: (self.lr.predict_proba(x)+self.xgb.predict_proba(x))/2)
+        return query_prob, data_prob
     
     def _fetch_exemples(self, path="./ml_models/exemple/queries.txt", save_to="./ml_models/exemple/", count=70):
+        """
+            Fouiller les résultats pertinents des requêtes contenues dans path
+        """
         questions = None
         with open(path, 'rb') as file:
             questions = file.readlines()
