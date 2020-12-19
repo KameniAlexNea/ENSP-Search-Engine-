@@ -1,0 +1,91 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <title>home - focus</title>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="{% static 'search_app/css/bootstrap/css/bootstrap.min.css' %}">
+        <link rel="stylesheet" href="{% static 'search_app/css/index.css' %}">
+        <link rel="stylesheet" href="{% static 'search_app/css/util.css' %}">
+        <link rel="stylesheet" href="{% static 'search_app/css/select-box.css' %}">
+        <!-- <link rel='stylesheet' href='https://opensource.keycdn.com/fontawesome/4.6.3/font-awesome.min.css'> -->
+        <!-- <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script> -->
+    </head>
+
+    <body>
+        <div class="conteneur">
+            <div class="entete-0">
+                <div class="entete-1">
+                    <div class="recherche">
+                        <div class="logo">
+                            <img src="{% static 'search_app/assets/logo.png' %}" alt="logo focus" width="25px">
+                        </div>
+                        <form action="{% url 'search_app:index' %}" id="search_form">
+                            <div class="search-input">
+                                <input type='text' name='q' placeholder='Que desirez-vous chercher?' autocomplete='off'>
+                                <input type="submit" value="" id="search">
+                            </div>
+                        </form>
+                    </div>
+                    <!-- <div class="menu">
+                        <button class="hamburger"></button>
+                    </div> -->
+                    <!-- <div class="dropdown">
+                        <div class="select">
+                            <span>Options</span>
+                            <i class="fa fa-chevron-left"></i>
+                        </div>
+                        <input type="hidden" name="gender">
+                        <ul class="dropdown-menu">
+                            <li id="all">Tous les résultats</li>
+                            <li id="mam">Mot à Mots</li>
+                        </ul>
+                    </div> -->
+                </div>
+                <div class="entete-2">
+                    <div class="type-resultat">
+                        <div class="filtre actif" id='avec-filtre' title='filtrer les resultats de la recherche (resultats pédagogiques)'>Filtrés</div>
+                    </div>
+                </div>
+                
+            </div>
+            <div class='row'>
+                <div class='col-2' style="background-image: url('{% static 'search_app/assets/logo_focus_final.png' %}'); background-repeat: repeat;"></div>
+                <div class='col' id='resultat' style='height:auto;'>
+                    <div class="list-group">
+                        {% for resultat in resultats %}
+                            <a href="{{resultat.link}}" class="list-group-item list-group-item-action" style="margin-bottom:1px;">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1" style='color: blue;'>{{resultat.title}}</h5>
+                            </div>
+                            <p>{{resultat.summary}}</p>
+                            <small>Autres informations pertinantes</small>
+                            </a>
+                        {% endfor %}
+                    </div>
+                    <div class="clearfix"></div>
+                    <div class='row'>
+                        <div style="display: flex;justify-content: center;align-items: center;width: 100%">
+                            <nav aria-label="navigation">
+                                <ul class="pagination pg-blue ">
+                                    {% for i in x %}
+                                    <li class="page-item"><a class ="page-link" tabindex="-1" href="?page={{ forloop.counter }}">{{ forloop.counter }}</a></li>
+                                    {% endfor %}
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+                <div class='col-2' style="transform:scaleX(-1); background-image: url('{% static 'search_app/assets/logo_focus_final.png' %}'); background-repeat: repeat;"></div>
+            </div>
+        </div>
+        <script src="{% static 'search_app/extension/jquery-2.2.4.min.js' %}"></script>
+        <script src="{% static 'search_app/js/select-box.js' %}"></script>
+        <script src="{% static 'search_app/js/ui.js' %}"></script>
+    </body>
+
+</html>
+
+<!-- rgb(121, 121, 224) -->

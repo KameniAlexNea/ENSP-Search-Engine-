@@ -1,0 +1,41 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>home - focus</title>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="{% static 'search_app/css/home.css' %}">
+    </head>
+    <body>
+        <div id='max-container'>
+            <div class="container">
+                <div class="search-box">
+                    <div id="logo">
+                        <img src="{% static 'search_app/assets/logo_modif.png' %}" alt="" width="120px">
+                    </div>
+                    <form action="{% url 'search_app:index' %}" id="search">
+                        {% csrf_token %}
+                        <div class="search-input">
+                            <input type='text' name='q' placeholder='Que desirez-vous chercher?' autocomplete='off'>
+                            <input type="submit" value="" id="search">
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="footer">
+                <div class="footer-start">
+                    <a id="display-membres">Membres du groupe de stage : </a>
+                    <div class="membres">
+                        ALEX KAMENI  et HUGO SONDI
+                    </div>
+                </div>
+                <div class="footer-end">
+                    <div>STAGE AU LABO DU GENIE INFORMATIQUE</div>
+                    <div>ENSP</div>
+                </div>
+            </div>
+        </div>
+        <script src="{% static 'search_app/js/home.js' %}"></script>
+    </body>
+</html>
