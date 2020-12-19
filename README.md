@@ -34,4 +34,9 @@ ou
 
 > python manage.py runserver
 
-Entrer l'adresse qui s'affiche dans votre console, dans votre navigateur
+Entrer l'adresse qui s'affiche dans votre console, dans votre navigateur en ajoutant **search_app/**
+
+
+**Note** consulter gitignore pour savoir quels sont les fichiers exclus du projet en ligne. M'envoyer un message à mon adresse pour avoir ses fichiers
+
+**Bonne navigation**
