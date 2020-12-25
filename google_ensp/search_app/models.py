@@ -1,8 +1,8 @@
-# from django.db import models
+from django.db import models
 import pandas as pd
 import numpy as np
 import os
-import ml_models.tools.models as m
+from search_app.ml_models.tools import models as m
 import glob
 import requests
 import pickle as pkl
@@ -11,7 +11,7 @@ import pickle as pkl
 # Create your models here.
 
 class EngineModel():
-    def __init__(self, model_folder="./ml_models/sauvegarde/"):
+    def __init__(self, model_folder="./search_app/ml_models/sauvegarde/"):
         self.headers = { 
             "apikey": "60e07650-2df1-11eb-96e2-bf23fa38d811"
         }
@@ -26,18 +26,28 @@ class EngineModel():
         self.vectoriser = None
         self._read(model_folder)
     
-    def _read(self, model_folder="./ml_models/sauvegarde/"):
+    def _read(self, model_folder="./search_app/search_app/search_app/ml_models/sauvegarde/"):
         """
             Charger les modèles de machine de learning pour la classification
         """
-        with open(model_folder+"model_lr.pkl", "rb") as file:
+        with open(model_folder+"linear_reg.pkl", "rb") as file:
             self.lr = pkl.load(file) # Model Logistique
-        with open(model_folder+"model_xgboost.pkl", "rb") as file:
+        with open(model_folder+"xgboost.pkl", "rb") as file:
             self.xgb = pkl.load(file) # Model XGBoost
-        with open(model_folder+"tfidf.pkl", "rb") as file:
+        with open(model_folder+"tfid2.pkl", "rb") as file:
             self.vectoriser = pkl.load(file) # Model Vectoriser
+    
+    def search(self, query, count=70, local=True):
+        if local:
+            qr, dt = self._fetch_data_offline()
+        else:
+            qr, dt = self._fetch_data(query, count)
+        qr_cl, dt_cl = self._clean_text(query, dt)
+        qr_pb, dt_pb = self._classify_base_on_bloom(qr_cl, dt_cl)
+        return (qr, dt), (qr_pb, dt_pb), self.lr.classes_
 
-    def clean_text(self, question:str, answers:pd.DataFrame, column="description"):
+
+    def _clean_text(self, question:str, answers:pd.DataFrame, column="description"):
         """
             Nettoyer les données obtenues de la requête et de l'API de recherche
             Params:
@@ -52,22 +62,24 @@ class EngineModel():
         query = pd.DataFrame(np.array([question]), columns=["text"])
         self.data_clean = m.clean_dataframe(reponses)
         self.query = m.clean_dataframe(query)
-        return self.data_clean.copy()
+        return self.query, self.data_clean.copy()
     
-    def classify_base_on_bloom(self, query_clean, data_clean, column="text_clean"):
+    def _classify_base_on_bloom(self, query_clean, data_clean, column="text_clean"):
         """
             Classifier la requete ainsi que le jeu de données d'entrainement
         """
         query_vect = self.vectoriser.transform(query_clean[column])
         query_prob = (self.lr.predict_proba(query_vect)+self.xgb.predict_proba(query_vect))/2
+        query_prob = pd.DataFrame(np.array(query_prob.values), columns=self.lr.classes_)
 
         data_vect = data_clean[column].apply(lambda x: self.vectoriser.transform(x))
         data_prob = data_vect.apply(lambda x: (self.lr.predict_proba(x)+self.xgb.predict_proba(x))/2)
+        data_prob = pd.DataFrame(np.array(data_prob.values), columns=self.lr.classes_)
         return query_prob, data_prob
     
 
     
-    def _fetch_exemples(self, path="./ml_models/exemple/queries.txt", save_to="./ml_models/exemple/", count=70):
+    def _fetch_exemples(self, path="./search_app/ml_models/exemple/queries.txt", save_to="./search_app/ml_models/exemple/", count=70):
         """
             Fouiller les résultats pertinents des requêtes contenues dans path
         """
@@ -99,7 +111,7 @@ class EngineModel():
         self.data = pd.DataFrame(self.response.json()["organic"])
         return query, self.data[self.columns].copy()
 
-    def _fetch_data_offline(self, path='./ml_models/exemple/query*.csv', queries_path='./ml_models/exemple/queries.txt'):
+    def _fetch_data_offline(self, path='./search_app/ml_models/exemple/query*.csv', queries_path='./search_app/ml_models/exemple/queries.txt'):
         """
             Appliquer les différents modèles sur des données en local
             Params:
@@ -109,12 +121,14 @@ class EngineModel():
                 DataFrame de resultat ainsi que la requête transmise
                 question, answers
                     - question: str
-                    - answers: pd.DataFrame: [link, title, snippet]
+                    - answers: pd.DataFrame: ["url", "title", "description", "destination"]
         """
         np.random.seed()
         exemples = glob.glob(path)
         if len(exemples) == 0:
-            raise Exception("No queries examples found in {}".format(path))
+            self._fetch_exemples()
+            exemples = glob.glob(path)
+            # raise Exception("No queries examples found in {}".format(path))
         path_queries_index = np.random.choice(range(len(exemples)))
         self.data = pd.read_csv(exemples[path_queries_index])
         with open(queries_path, 'rb') as file:
@@ -124,21 +138,24 @@ class EngineModel():
 
 class Result(models.Model):
 
-    def __init__(self, row, link, title, summary, bloom_type, score, query_class):
-        self.link = link
-        self.title = title
-        self.summary = summary
-        self.bloom_type = bloom_type
-        self.score = score
-        self.query_class = query_class
+    def __init__(self, row, url, title, description, destination, bloom_type):
         self.row = row
+        self.url = url
+        self.title = title
+        self.description = description
+        self.destination = destination
+
+        self.bloom_type = bloom_type
 
     def __str__(self):
         return self.title
 
     @classmethod
     def fromEngineResult(cls, row, data):
-        return cls(row, data[0], data[1], data[2], data[3], data[4], data[5])
+        """
+            ["url", "title", "description", "destination"]
+        """
+        return cls(row, data["url"], data["title"], data["description"], data["destination"], " ".join(data["bloom"]))
 
     @staticmethod
     def createResults(df: pd.DataFrame):
