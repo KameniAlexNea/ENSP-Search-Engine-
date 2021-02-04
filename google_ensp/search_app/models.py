@@ -68,13 +68,14 @@ class EngineModel():
         """
             Classifier la requete ainsi que le jeu de données d'entrainement
         """
-        query_vect = self.vectoriser.transform(query_clean[column])
+        query_vect = self.vectoriser.transform(query_clean[column].values)
         query_prob = (self.lr.predict_proba(query_vect)+self.xgb.predict_proba(query_vect))/2
-        query_prob = pd.DataFrame(np.array(query_prob.values), columns=self.lr.classes_)
+        query_prob = pd.DataFrame(query_prob, columns=self.lr.classes_)
 
-        data_vect = data_clean[column].apply(lambda x: self.vectoriser.transform(x))
-        data_prob = data_vect.apply(lambda x: (self.lr.predict_proba(x)+self.xgb.predict_proba(x))/2)
-        data_prob = pd.DataFrame(np.array(data_prob.values), columns=self.lr.classes_)
+        data_vect = self.vectoriser.transform(data_clean[column].values)
+        data_prob = (self.lr.predict_proba(data_vect) + self.xgb.predict_proba(data_vect))/2
+        data_prob = pd.DataFrame(np.array(data_prob.reshape(-1, 6)), columns=self.lr.classes_)
+        print('Shape', data_prob.shape)
         return query_prob, data_prob
     
 
@@ -155,7 +156,7 @@ class Result(models.Model):
         """
             ["url", "title", "description", "destination"]
         """
-        return cls(row, data["url"], data["title"], data["description"], data["destination"], " ".join(data["bloom"]))
+        return cls(row, data["url"], data["title"], data["description"], data["destination"], " ".join(np.array(data["bloom"], dtype=np.str)))
 
     @staticmethod
     def createResults(df: pd.DataFrame):

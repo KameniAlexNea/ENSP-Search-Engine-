@@ -34,7 +34,7 @@ def clean_dataframe(df:pd.DataFrame, column="text", show_progress=False):
     data = df.copy()
     columns = list(df.columns)
     _progress("unidecode", show_progress)
-    data[column] = data[column].apply(lambda x: unidecode_text(x))
+    #  data[column] = data[column].apply(lambda x: unidecode_text(x))
     
     _progress("clean_text", show_progress)
     data = clean_text(data, text_field=column)
@@ -69,8 +69,8 @@ def clean_text(df:pd.DataFrame, text_field='text', new_text_field_name='text_cle
         Nettoyer du texte. Extraire les mot et chiffres
     """
     df[new_text_field_name] = df[text_field].str.lower() #Convert strings in the Series/Index to lowercase.
-    df[new_text_field_name] = df[new_text_field_name].apply(lambda elem: re.sub(r"(@[A-Za-z0-9]+)|([^0-9A-Za-z \t])|(\w+:\/\/\S+)|^rt|http.+?", "", elem)) 
-    df[new_text_field_name] = df[new_text_field_name].apply(lambda elem: re.sub(r"\d+", "", elem))
+    df[new_text_field_name] = df[new_text_field_name].apply(lambda elem: re.sub(r"(@[A-Za-z0-9]+)|([^0-9A-Za-z \t])|(\w+:\/\/\S+)|^rt|http.+?", "", str(elem))) 
+    df[new_text_field_name] = df[new_text_field_name].apply(lambda elem: re.sub(r"\d+", "", str(elem)))
     
     return df
 

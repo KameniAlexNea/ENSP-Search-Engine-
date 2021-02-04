@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from .forms import QueryForm
 from .models import EngineModel, Result
+import numpy as np
 
 ml = EngineModel()
 
@@ -21,10 +22,15 @@ def index(request):
             # redirect to a new URL:
             query = form.cleaned_data["query"]
             (qr, dt), (qr_pb, dt_pb), classes = ml.search(query)
-            print(qr, qr_pb, classes)
-            dt["bloom"] = dt_pb.values
+            print(qr, classes)
+            print(qr_pb)
+            print("Head")
+            print(dt_pb.head())
 
-            return render(request, 'app/index.html', {'form': form, "results": Result.createResults(dt)})
+            print(dt.head())
+            dt["bloom"] = list(dt_pb.values)
+
+            return render(request, 'search_app/index.html', {'form': form, "results": Result.createResults(dt)})
     form = QueryForm()
     return render(request, 'search_app/index.html', {'form': form})
 

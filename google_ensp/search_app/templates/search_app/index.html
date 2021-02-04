@@ -55,13 +55,13 @@
                 <div class='col-2' style="background-image: url('{% static 'search_app/assets/logo_focus_final.png' %}'); background-repeat: repeat;"></div>
                 <div class='col' id='resultat' style='height:auto;'>
                     <div class="list-group">
-                        {% for resultat in resultats %}
+                        {% for resultat in results %}
                             <a href="{{resultat.destination}}" class="list-group-item list-group-item-action" style="margin-bottom:1px;">
                             <div class="d-flex w-100 justify-content-between">
                                 <h5 class="mb-1" style='color: blue;'>{{resultat.title}}</h5>
                             </div>
                             <p>{{resultat.description}}</p>
-                            <small>resultat.bloom_type</small>
+                            <small>{{resultat.bloom_type}}</small>
                             </a>
                         {% endfor %}
                     </div>
