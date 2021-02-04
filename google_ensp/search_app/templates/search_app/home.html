@@ -14,10 +14,10 @@
                     <div id="logo">
                         <img src="{% static 'search_app/assets/logo_modif.png' %}" alt="" width="120px">
                     </div>
-                    <form action="{% url 'search_app:index' %}" id="search">
+                    <form action="{% url 'search_app:index' %}" id="search" method="POST">
                         {% csrf_token %}
                         <div class="search-input">
-                            <input type='text' name='q' placeholder='Que desirez-vous chercher?' autocomplete='off'>
+                            <input type='text' name='query' placeholder='Que desirez-vous chercher?' autocomplete='off'>
                             <input type="submit" value="" id="search">
                         </div>
                     </form>

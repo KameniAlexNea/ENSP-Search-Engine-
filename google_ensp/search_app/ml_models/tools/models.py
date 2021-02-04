@@ -34,7 +34,7 @@ def clean_dataframe(df:pd.DataFrame, column="text", show_progress=False):
     data = df.copy()
     columns = list(df.columns)
     _progress("unidecode", show_progress)
-    data[column] = data[column].apply(lambda x: unidecode(x))
+    data[column] = data[column].apply(lambda x: unidecode_text(x))
     
     _progress("clean_text", show_progress)
     data = clean_text(data, text_field=column)
@@ -61,11 +61,7 @@ def _progress(text, show_progress):
 
 # 1
 def unidecode_text(text):
-    try:
-        text = unidecode(text)
-    except:
-        pass
-    return text
+    return text.lower()
 
 # 2
 def clean_text(df:pd.DataFrame, text_field='text', new_text_field_name='text_clean'):
