@@ -4,9 +4,11 @@ import string
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from nltk.tokenize import TweetTokenizer
+import helpers
+import numpy as np
 
 def join_process(text):
-    return " ".join(helper.process_text(text))
+    return " ".join(process_text(text))
 
 def process_text(text):
     """Process text function.

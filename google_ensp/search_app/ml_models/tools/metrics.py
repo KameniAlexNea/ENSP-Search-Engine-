@@ -153,7 +153,15 @@ def get_npv(y, pred, th=0.5):
 
 def print_stats(preds, target, labels, sep='-', sep_len=40, fig_size=(10,8)):
     """
-        Afficher les statistiques d'un modèle
+        Print model statistic
+
+        Args:
+            preds: model prediction
+            target: ground truth
+            labels: class name
+            ** others parameters
+        Returns:
+            None
     """
     print('Accuracy = %.3f' % np.mean(target==preds))
     print(sep*sep_len)
@@ -176,6 +184,21 @@ def get_performance_metrics(y, pred, class_labels, tp=true_positives,
                             acc=get_accuracy, prevalence=get_prevalence, spec=get_specificity,
                             sens=get_sensitivity, ppv=get_ppv, npv=get_npv, auc=roc_auc_score, f1=f1_score,
                             thresholds=[]):
+    """
+        Compute model performance on each class
+
+        Args:
+            y: np.ndarray (n_samples, n_classes)
+                ground truth
+            pred: np.ndarray (n_samples, n_classes)
+                model probability prediction
+            class_labels: class name
+            thresholds: list
+                threshold of each class
+            ** others parameters
+        Returns:
+            performances: dataframe
+    """
     if len(thresholds) != len(class_labels):
         thresholds = [.5] * len(class_labels)
 
